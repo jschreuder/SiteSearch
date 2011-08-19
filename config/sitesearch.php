@@ -1,5 +1,9 @@
 <?php
 
 return array(
-	'table_name'  => 'sitesearch',
+
+	'default' => array(
+		'table_name'  => 'sitesearch',
+		'language'    => 'english',
+	),
 );
