@@ -3,27 +3,37 @@
 namespace SiteSearch;
 
 class SiteSearch_Stemmer_Dutch implements SiteSearch_Stemmer_Driver {
-	
+
 	protected static $use_step_2 = false;
-	
-	public static function stem($word)
+
+	public static function stem($words)
 	{
-		static::$use_step_2 = FALSE;
-		
+		$words = (array) $words;
+		foreach ($words as $key => $word)
+		{
+			$words[$key] = static::stem($word, true);
+		}
+		return $words;
+	}
+
+	protected static function _stem($word)
+	{
+		static::$use_step_2 = false;
+
 		// Start with removing accented suffixes
 		$word = static::step_0($word);
-			
+
 		// Cleanup accents
 		$word = str_replace(
 					array('ä','á','à','â','ã','ë','é','è','ê','ï','í','ì','î','ö','ó','ò','ô','ü','ú','ù','û','ç','ñ'),
 					array('a','a','a','a','a','e','e','e','e','i','i','i','i','o','o','o','o','u','u','u','u','c','n'),
 					$word);
-		
+
 		// Put initial y, y after a vowel, and i between vowels into upper case (treat as consonants).
 		$word = preg_replace(array('/^y|(?<=[aeiouyè])y/u', '/(?<=[aeiouyè])i(?=[aeiouyè])/u'),
 					array('Y', 'I'),
 					$word);
-		
+
 		/* R1 is the region after the first non-vowel following a vowel, or is the
 			null region at the end of the word if there is no such non-vowel. */
 		$r1 = 0;
@@ -31,7 +41,7 @@ class SiteSearch_Stemmer_Dutch implements SiteSearch_Stemmer_Driver {
 		{
 			$r1 = $matches[0][1] + 2;
 		}
-		
+
 		/* R2 is the region after the first non-vowel following a vowel in R1, or is
 			the null region at the end of the word if there is no such non-vowel. */
 		$r2 = 0;
@@ -39,25 +49,25 @@ class SiteSearch_Stemmer_Dutch implements SiteSearch_Stemmer_Driver {
 		{
 			$r2 = $matches[0][1] + 2;
 		}
-		
+
 		// Steps 1-4: suffix removal
 		$word = static::step_1($word, $r1, $r2);
 		$word = static::step_2($word, $r1, $r2);
 		$word = static::step_3($word, $r1, $r2);
 		$word = static::step_4($word, $r1, $r2);
-		
+
 		// Return I en Y that were treated as consonants to lowercase
 		$word = str_replace(array('Y', 'I'), array('y', 'i'), $word);
-		
+
 		return $word;
 	}
-	
+
 	protected static function step_0($word)
 	{
 		// Step 0: accented suffixes
 		return preg_replace('/eën$/u', 'e', preg_replace('/(ieel|iële|ieën)$/u', 'ie', $word));
 	}
-	
+
 	protected static function step_1($word, $r1, $r2)
 	{
 		// Step 1:
@@ -97,7 +107,7 @@ class SiteSearch_Stemmer_Dutch implements SiteSearch_Stemmer_Driver {
 		}
 		return $word;
 	}
-	
+
 	protected static function step_2($word, $r1, $r2)
 	{
 		// Step 2:
@@ -108,13 +118,13 @@ class SiteSearch_Stemmer_Dutch implements SiteSearch_Stemmer_Driver {
 			{
 				// TODO: this should be here to make any sense
 				// global $_dutchstemmer_step2;
-				static::$use_step_2 = TRUE;
+				static::$use_step_2 = true;
 				return static::undouble(preg_replace('/e$/u', '', $word, -1, $count));
 			}
 		}
 		return $word;
 	}
-	
+
 	protected static function step_3($word, $r1, $r2)
 	{
 		// Step 3a: heid
@@ -130,7 +140,7 @@ class SiteSearch_Stemmer_Dutch implements SiteSearch_Stemmer_Driver {
 				}
 			}
 		}
-		
+
 		// Step 3b: d-suffixes (*)
 		// Search for the longest among the following suffixes, and perform the action indicated.
 		if ($r2)
@@ -166,15 +176,15 @@ class SiteSearch_Stemmer_Dutch implements SiteSearch_Stemmer_Driver {
 				$word = preg_replace('/bar$/u', '', $word, -1, $count);
 			}
 		}
-		
+
 		return $word;
 	}
-	
+
 	protected static function step_4($word, $r1, $r2)
 	{
 		// Step 4: undouble vowel
 		// If the words ends CVD, where C is a non-vowel, D is a non-vowel other than
-		// I, and V is double a, e, o or u, remove one of the vowels from V 
+		// I, and V is double a, e, o or u, remove one of the vowels from V
 		// (for example, maan -> man, brood -> brod).
 		if (preg_match('/[^aeiouyè](aa|ee|oo|uu)[^Iaeiouyè]$/u', $word))
 		{
@@ -182,7 +192,7 @@ class SiteSearch_Stemmer_Dutch implements SiteSearch_Stemmer_Driver {
 		}
 		return $word;
 	}
-	
+
 	protected static function undouble($word)
 	{
 		return preg_match('/(bb|dd|gg|kk|ll|mm|nn|pp|rr|ss|tt|zz)$/u', $word) ? substr($word, 0, -1) : $word;
