@@ -58,6 +58,11 @@ class SiteSearch {
 	protected $table_name;
 
 	/**
+	 * @var  string  connection name
+	 */
+	protected $connection;
+
+	/**
 	 * @var  array  optional table to join on the result
 	 */
 	protected $join = array();
@@ -272,7 +277,7 @@ class SiteSearch {
 				'word' => $word,
 				'score' => $score,
 				'page_id' => $page_id
-			))->execute();
+			))->execute($this->connection);
 		}
 
 		return $this;
@@ -286,7 +291,7 @@ class SiteSearch {
 	 */
 	public function remove_page($page_id)
 	{
-		\DB::delete($this->table_name)->where('page_id', $page_id)->execute();
+		\DB::delete($this->table_name)->where('page_id', $page_id)->execute($this->connection);
 
 		return $this;
 	}
@@ -298,7 +303,7 @@ class SiteSearch {
 	 */
 	public function remove_full_index()
 	{
-		\DB::delete($this->table_name)->execute();
+		\DB::delete($this->table_name)->execute($this->connection);
 
 		return $this;
 	}
@@ -356,7 +361,7 @@ class SiteSearch {
 			->order_by('nb', 'desc')
 			->order_by('weight', 'desc');
 
-		return $query->execute()->as_array();
+		return $query->execute($this->connection)->as_array();
 	}
 
 	/**
