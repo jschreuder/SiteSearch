@@ -11,7 +11,7 @@ class SiteSearch_Stemmer_English implements SiteSearch_Stemmer_Driver {
 
 	public static function stem($word)
 	{
-		return PorterStemmer::stem($word, true);
+		return \PorterStemmer::stem($word, true);
 	}
 }
 
