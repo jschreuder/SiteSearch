@@ -94,7 +94,7 @@ class SiteSearch {
 			), ' ', ' '.$string);
 
 		// Replace images with their alt or title text
-		$string = preg_replace('/<img([^><]+)(title="([^><"]+)"|alt="([^><"]+)")([^><]*)[\/]?>/', '$2 ', $string);
+		$string = preg_replace('/<img([^><]+)(title="([^><"]+)"|alt="([^><"]+)")([^><]*)[\/]?>/', ' $2 ', $string);
 		$string = preg_replace('/(alt=|title=)/', '', $string);
 
 		// Strip all tags
@@ -102,8 +102,6 @@ class SiteSearch {
 
 		// Decode all HTML special characters...
 		$string = htmlspecialchars_decode($string);
-		// ... and remove all entities left
-		$string = preg_replace('/&([a-zA-Z0-9#]+);/', '', $string);
 
 		// Make all-lowercase
 		$string = strtolower($string);
@@ -114,13 +112,11 @@ class SiteSearch {
 		$string = preg_replace('/([:;\{\}\[\]\/\\-'."\n\t".']+)/', ' ', $string);
 
 		// Final cleanup
-		$string = preg_replace('/([^a-z0-9äáàâãëéèêïíìîöóòôüúùûçñ ]+)/', '', $string);
+		$string = \Inflector::ascii($string);
+		$string = preg_replace('/([^a-z0-9% ]+)/', '', $string);
 
-		// Remove noise words
-		$string = $this->remove_noise($string);
-
-		// Return cleaned up string (and remove the prefixed string)
-		return substr($string, 1);
+		// Return cleaned up string (and remove the prefixed space)
+		return $string;
 	}
 
 	/**
@@ -146,12 +142,14 @@ class SiteSearch {
 			}
 		}
 
+		// Remove noise words
+		$array = $this->remove_noise($array);
+
 		// Use stemmer on all words
 		$array = $this->parse_stemmer($array);
 
 		// Score by number of occurances of each word
-		$array = array_count_values($array);
-		unset($array['']);
+		$array = array_count_values(array_filter($array), true);
 
 		// Return the array of words and their scores
 		return $array;
@@ -222,23 +220,31 @@ class SiteSearch {
 	}
 
 	/**
-	 * Remove noise words from string
+	 * Remove noise words from array
+	 *
+	 * @param  array
 	 */
-	public function remove_noise($string)
+	public function remove_noise(array $array, $filter_keys = false)
 	{
-		// TODO needs to use the $this->lang setting, currently not supported by Fuel
-		\Lang::load('sitesearch', true);
-		$noise_words = \Lang::line('sitesearch.noise_words');
+		$lang = $this->language ?: \Config::get('language');
+		\Lang::load('sitesearch', 'sitesearch.'.$lang, $lang);
+		$noise_words = (array) \Lang::line('sitesearch.'.$lang.'.noise_words', array());
 
-		if (is_array($noise_words))
+		if ($filter_keys)
 		{
-			foreach($noise_words as $noise)
+			foreach ($noise_words as $noise)
 			{
-				$string = str_replace(' '.$noise.' ', ' ', $string);
+				unset($array[$noise]);
 			}
 		}
+		else
+		{
+			$array = array_filter($array, function($val) use ($noise_words) {
+				return in_array($val, $noise_words);
+			});
+		}
 
-		return $string;
+		return $array;
 	}
 
 	/**
@@ -333,18 +339,21 @@ class SiteSearch {
 		// Create array of keywords
 		$keywords = explode(' ', $string);
 
+		// remove noise words
+		$keywords = $this->remove_noise($keywords);
+
 		// Use stem parser
 		$keywords = $this->parse_stemmer($keywords);
 
-		// Remove duplicate keywords
+		// Remove duplicate keywords and empty values
 		$keywords = array_filter(array_unique($keywords));
 
 		// Create query
 		$query = \DB::select(
-			\DB::expr($this->table_name.'.*'),
-			\DB::expr('COUNT(*) AS `nb`'),
-			\DB::expr('SUM(`'.$this->table_name.'`.`score`) AS `weight`'))
-			->from($this->table_name);
+				\DB::expr($this->table_name.'.*'),
+				\DB::expr('COUNT(*) AS `nb`'),
+				\DB::expr('SUM(`'.$this->table_name.'`.`score`) AS `weight`')
+			)->from($this->table_name);
 
 		if ( ! empty($this->join))
 		{
@@ -380,6 +389,7 @@ class SiteSearch {
 
 		$q = Db::find('structure')->where('name', $pagename)->related('structure_links')->getOne();
 
+		$page                   = new \stdClass();
 		$page->title			= $q->title;
 		$page->short_title		= $q->short_title;
 		$page->meta_keywords	= $q->meta_keywords;
