@@ -12,10 +12,7 @@
     ],
     "require": {
         "php": ">=5.4.0",
-        "camspiers/porter-stemmer": "1.0.0"
-    },
-    "require-dev": {
-        "codeclimate/php-test-reporter": "dev-master"
+        "camspiers/porter-stemmer": "~1.0"
     },
     "autoload": {
         "psr-4": {
