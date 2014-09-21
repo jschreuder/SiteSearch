@@ -4,6 +4,14 @@ namespace Webspot\SiteSearch\Language;
 
 class Dutch implements Driver
 {
+    private $noiseWords = [
+        'aan', 'alle', 'ben', 'bij', 'dan', 'dat', 'de', 'deze', 'die', 'dit', 'door', 'dus', 'een', 'elk', 'elke', 'en',
+        'ga', 'gaan', 'gaat', 'geen', 'ging', 'gingen', 'had', 'hadden', 'heb', 'hebben', 'hebt', 'het', 'hij', 'in', 'is',
+        'je', 'kan', 'kon', 'konden', 'kunnen', 'kunt', 'maar', 'mag', 'maken', 'meer', 'met', 'moet', 'mocht', 'mochten',
+        'moeten', 'mogen', 'naar', 'niet', 'nog', 'of', 'ook', 'op', 'over', 'te', 'tot', 'u', 'van', 'veel', 'voor',
+        'vooral', 'waren', 'was', 'wat', 'welke', 'werd', 'werden', 'wil', 'wilde', 'willen', 'wilden', 'word', 'worden',
+        'wordt', 'zal', 'zijn', 'zoals', 'zou', 'zouden', 'zullen',
+    ];
 
     protected static $use_step_2 = false;
 
