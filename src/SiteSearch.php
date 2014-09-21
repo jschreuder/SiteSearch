@@ -257,13 +257,13 @@ class SiteSearch
         }
 
         // Create query
-        $query  = "SELECT *, COUNT(*) AS nb, SUM(score) AS weight FROM {$this->tableReadName}";
+        $query  = "SELECT *, COUNT(*) AS matched, SUM(score) AS weight FROM {$this->tableReadName}";
         $query .= ' WHERE word IN ('.implode(',', array_fill(0, count($keywords), '?')).')';
         $query .= ' GROUP BY page_id';
         if ($type !== self::SEARCH_MATCH_ANY) {
-            $query .= ' HAVING nb = '.strval(count($keywords));
+            $query .= ' HAVING matched = '.strval(count($keywords));
         }
-        $query .= 'ORDER BY nb DESC, weight DESC';
+        $query .= 'ORDER BY matched DESC, weight DESC';
 
         $query = $this->getConnection()->prepare($query);
         $query->execute($keywords);

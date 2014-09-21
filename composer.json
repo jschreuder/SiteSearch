@@ -11,8 +11,13 @@
         }
     ],
     "require": {
-        "php": ">=5.4.0",
+        "php": ">=5.4.0"
+    },
+    "require-dev": {
         "camspiers/porter-stemmer": "~1.0"
+    },
+    "suggests": {
+        "camspiers/porter-stemmer": "necessary for the English language driver"
     },
     "autoload": {
         "psr-4": {
