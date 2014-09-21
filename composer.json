@@ -1,0 +1,30 @@
+{
+    "name": "webspot/sitesearch",
+    "type": "library",
+    "description": "Webspot SiteSearch, a very simple mySQL based search implementation for small websites",
+    "homepage": "http://webspotframework.com",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Jelmer Schreuder",
+            "email": "j.schreuder@webspotframework.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.4.0",
+        "camspiers/porter-stemmer": "1.0.0"
+    },
+    "require-dev": {
+        "codeclimate/php-test-reporter": "dev-master"
+    },
+    "autoload": {
+        "psr-4": {
+            "Webspot\\SiteSearch\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Webspot\\SiteSearch\\Test\\": "tests"
+        }
+    }
+}
